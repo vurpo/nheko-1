@@ -6,7 +6,7 @@
     <message>
         <location filename="../../src/ChatPage.cpp" line="+223"/>
         <source>Failed to invite user: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Failed to invite user: %1</translation>
     </message>
     <message>
         <location line="+4"/>
