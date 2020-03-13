@@ -9,6 +9,7 @@
 #include <mtx/responses.hpp>
 
 #include "Cache.h"
+#include "DeviceVerificationFlow.h"
 #include "Logging.h"
 #include "TimelineModel.h"
 #include "Utils.h"
@@ -42,6 +43,7 @@ public:
         Q_INVOKABLE bool isInitialSync() const { return isInitialSync_; }
         Q_INVOKABLE void openImageOverlay(QString mxcUrl, QString eventId) const;
         Q_INVOKABLE QColor userColor(QString id, QColor background);
+        Q_INVOKABLE void startDummyVerification();
 
 signals:
         void clearRoomMessageCount(QString roomid);
@@ -50,6 +52,7 @@ signals:
         void initialSyncChanged(bool isInitialSync);
         void replyingEventChanged(QString replyingEvent);
         void replyClosed();
+        void deviceVerificationRequest(DeviceVerificationFlow *deviceVerificationFlow);
 
 public slots:
         void updateReplyingEvent(const QString &replyingEvent)

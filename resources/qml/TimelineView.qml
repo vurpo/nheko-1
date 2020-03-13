@@ -8,6 +8,7 @@ import Qt.labs.settings 1.0
 import im.nheko 1.0
 
 import "./delegates"
+import "./device-verification"
 
 Item {
 	property var colors: currentActivePalette
@@ -72,6 +73,24 @@ Item {
 	Rectangle {
 		anchors.fill: parent
 		color: colors.window
+
+		Component {
+			id: deviceVerificationDialog
+			DeviceVerification {}
+		}
+		Connections {
+			target: timelineManager
+			onDeviceVerificationRequest: {
+				var dialog = deviceVerificationDialog.createObject(timelineRoot, {flow: deviceVerificationFlow});
+				dialog.show();
+			}
+		}
+
+		Button {
+			text: "test device verification"
+			onClicked: timelineManager.startDummyVerification()
+			z: 5
+		}
 
 		Text {
 			visible: !timelineManager.timeline && !timelineManager.isInitialSync
