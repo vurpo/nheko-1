@@ -1,36 +1,24 @@
 #include <QObject>
 #include <QDBusConnection>
+#include <mtx/requests.hpp>
+#include <mtx/responses.hpp>
 
 #include "UnifiedPushConnector.h"
-#include "Logging.h"
+#include "ChatPage.h"
 
-UnifiedPushConnectorAdaptor::UnifiedPushConnectorAdaptor(QSharedPointer<UserSettings> userSettings, QObject* parent)
+UnifiedPushConnectorAdaptor::UnifiedPushConnectorAdaptor(QObject* parent)
     : QDBusAbstractAdaptor(parent)
-    , userSettings_{userSettings}
 {
 }
 
-void UnifiedPushConnectorAdaptor::Message(const QString &token, const QString &message, const QString &id)
-{
-    if (userSettings_->unifiedPushRegistered() && token == userSettings_->unifiedPushToken()) {
-        nhlog::net()->info(QString("New UP push message: %1").arg(message).toStdString());
-    }
+void UnifiedPushConnectorAdaptor::Message(const QString &token, const QString &message, const QString &id) {
+    ((ChatPage *)parent())->pushMessageReceived(token, message, id);
 }
 
-void UnifiedPushConnectorAdaptor::NewEndpoint(const QString &token, const QString &endpoint)
-{
-    if (token == userSettings_->unifiedPushToken()) {
-        nhlog::net()->info(QString("Received new UP endpoint: %1").arg(endpoint).toStdString());
-        userSettings_->setUnifiedPushEndpoint(endpoint);
-        // TODO: Update the pusher on the Matrix homeserver here!
-        userSettings_->setUnifiedPushRegistered(true);
-    }
+void UnifiedPushConnectorAdaptor::NewEndpoint(const QString &token, const QString &endpoint) {
+    ((ChatPage *)parent())->pushNewEndpoint(token, endpoint);
 }
 
-void UnifiedPushConnectorAdaptor::Unregister(const QString &token)
-{
-    if (userSettings_->unifiedPushRegistered() && token == userSettings_->unifiedPushToken()) {
-        nhlog::net()->info("Unregistered from UP");
-        userSettings_->setUnifiedPushRegistered(false);
-    }
+void UnifiedPushConnectorAdaptor::Unregister(const QString &token) {
+    ((ChatPage *)parent())->pushUnregistered(token);
 }

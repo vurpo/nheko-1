@@ -29,7 +29,6 @@
 #include "RoomList.h"
 #include "SideBarActions.h"
 #include "Splitter.h"
-#include "UnifiedPushConnector.h"
 #include "UserInfoWidget.h"
 #include "UserSettingsPage.h"
 #include "Utils.h"
@@ -74,8 +73,6 @@ ChatPage::ChatPage(QSharedPointer<UserSettings> userSettings, QWidget *parent)
         qRegisterMetaType<mtx::presence::PresenceState>();
         qRegisterMetaType<mtx::secret_storage::AesHmacSha2KeyDescription>();
         qRegisterMetaType<SecretsToDecrypt>();
-
-        registerUnifiedPush();
 
         topLayout_ = new QHBoxLayout(this);
         topLayout_->setSpacing(0);
@@ -294,6 +291,7 @@ ChatPage::ChatPage(QSharedPointer<UserSettings> userSettings, QWidget *parent)
                 [this](const QString &roomid, const QString &eventid) {
                         Q_UNUSED(eventid)
                         room_list_->highlightSelectedRoom(roomid);
+                        window()->show();
                         activateWindow();
                 });
         connect(&notificationsManager,
@@ -302,6 +300,7 @@ ChatPage::ChatPage(QSharedPointer<UserSettings> userSettings, QWidget *parent)
                 [this](const QString &roomid, const QString &eventid, const QString &body) {
                         view_manager_->queueReply(roomid, eventid, body);
                         room_list_->highlightSelectedRoom(roomid);
+                        window()->show();
                         activateWindow();
                 });
 
@@ -493,6 +492,8 @@ ChatPage::bootstrap(QString userid, QString homeserver, QString token)
                         &notificationsManager,
                         &NotificationsManager::removeNotification);
 
+                registerUnifiedPush();
+
                 const bool isInitialized = cache::isInitialized();
                 const auto cacheVersion  = cache::formatVersion();
 
@@ -550,7 +551,6 @@ ChatPage::bootstrap(QString userid, QString homeserver, QString token)
                 emit dropToLoginPageCb(QString::fromStdString(e.what()));
                 return;
         }
-
         getProfileInfo();
         tryInitialSync();
 }
@@ -708,14 +708,68 @@ ChatPage::showNotificationsDialog(const QPoint &widgetPos)
 }
 
 void
+ChatPage::pushMessageReceived(const QString &token, const QString &message, const QString &id)
+{
+    if (userSettings_->unifiedPushRegistered() && token == userSettings_->unifiedPushToken()) {
+        nhlog::net()->info(QString("New UP push message: %1").arg(message).toStdString());
+    }
+}
+
+void
+ChatPage::pushNewEndpoint(const QString &token, const QString &endpoint)
+{
+    if (token == userSettings_->unifiedPushToken()) {
+        nhlog::net()->info(QString("Received new UP endpoint: %1").arg(endpoint).toStdString());
+        userSettings_->setUnifiedPushEndpoint(endpoint);
+
+        mtx::requests::PusherData d;
+        //TODO: This URL has to be used as a workaround until MSC2970 is merged
+        d.url = "https://matrix.gateway.unifiedpush.org/_matrix/push/v1/notify";
+        d.format = "event_id_only";
+
+        mtx::requests::SetPusher s;
+        s.pushkey = endpoint.toStdString();
+        s.kind = "http";
+        s.app_id = "io.github.NhekoReborn.Nheko";
+        s.app_display_name = "Nheko";
+        s.device_display_name = userSettings_->deviceId().toStdString();
+        s.lang = "en"; //TODO: ???
+        s.data = d;
+
+        http::client()->set_pusher(s, [](const mtx::responses::Empty &, mtx::http::RequestErr err){
+            if (err) {
+                nhlog::net()->warn("Failed to set pusher! {}", err->matrix_error.error);
+            } else {
+                nhlog::net()->info("Successfully set/updated Matrix pusher");
+            }
+        });
+        userSettings_->setUnifiedPushRegistered(true);
+    } else {
+        nhlog::net()->warn("Wrong token: {} {}", token.toStdString(), endpoint.toStdString());
+    }
+}
+
+void
+ChatPage::pushUnregistered(const QString &token)
+{
+    if (userSettings_->unifiedPushRegistered() && token == userSettings_->unifiedPushToken()) {
+        nhlog::net()->info("Unregistered from UP, attempting to register again");
+        userSettings_->setUnifiedPushRegistered(false);
+    }
+}
+
+void
 ChatPage::registerUnifiedPush()
 {
         QDBusConnection bus = QDBusConnection::sessionBus();
         if (bus.isConnected()) {
                 nhlog::net()->info("Bus connected, registering service");
-                UnifiedPushConnectorAdaptor* connector = new UnifiedPushConnectorAdaptor(userSettings_, this);
+                connector_ = new UnifiedPushConnectorAdaptor(this);
                 bus.registerObject("/org/unifiedpush/Connector", this);
                 bus.registerService("io.github.NhekoReborn.Nheko");
+        } else {
+                nhlog::net()->info("Session bus not connected, no push notifications!");
+                return;
         }
 
         QString token;
@@ -752,6 +806,7 @@ ChatPage::registerUnifiedPush()
                 "Register"
         );
         message.setArguments({QVariant("io.github.NhekoReborn.Nheko"), QVariant(token)});
+        // TODO: possibly check whether this was successful
         bus.send(message);
 }
 

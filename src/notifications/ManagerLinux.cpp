@@ -80,7 +80,7 @@ NotificationsManager::postNotification(const mtx::responses::Notification &notif
         // TODO(Nico): Look into what to actually put there.
         argumentList << (QStringList("default") << ""
                                                 << "inline-reply"
-                                                << ""); // actions
+                                                << tr("Reply")); // actions
         argumentList << hints;                          // hints
         argumentList << (int)-1;                        // timeout in ms
 

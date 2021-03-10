@@ -29,6 +29,7 @@
 #include "CacheStructs.h"
 #include "CommunitiesList.h"
 #include "notifications/Manager.h"
+#include "UnifiedPushConnector.h"
 
 class OverlayModal;
 class QuickSwitcher;
@@ -96,6 +97,10 @@ public:
         void setStatus(const QString &status);
 
         mtx::presence::PresenceState currentPresence() const;
+
+        void pushMessageReceived(const QString &token, const QString &message, const QString &id);
+        void pushNewEndpoint(const QString &token, const QString &endpoint);
+        void pushUnregistered(const QString &token);
 
 public slots:
         void handleMatrixUri(const QByteArray &uri);
@@ -272,6 +277,8 @@ private:
 
         NotificationsManager notificationsManager;
         CallManager *callManager_;
+
+        UnifiedPushConnectorAdaptor *connector_;
 };
 
 template<class Collection>
