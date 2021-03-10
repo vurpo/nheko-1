@@ -324,6 +324,7 @@ set(SRC_FILES
 	src/SideBarActions.cpp
 	src/Splitter.cpp
 	src/TrayIcon.cpp
+	src/UnifiedPushConnector.cpp
 	src/UserInfoWidget.cpp
 	src/UserSettingsPage.cpp
 	src/UsersModel.cpp
@@ -540,6 +541,7 @@ qt5_wrap_cpp(MOC_HEADERS
 	src/SideBarActions.h
 	src/Splitter.h
 	src/TrayIcon.h
+	src/UnifiedPushConnector.h
 	src/UserInfoWidget.h
 	src/UserSettingsPage.h
 	src/UsersModel.h

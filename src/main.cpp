@@ -170,6 +170,11 @@ main(int argc, char *argv[])
           QCoreApplication::tr("profile name"));
         parser.addOption(configName);
 
+        QCommandLineOption dbusActivate(
+          QStringList() << "dbus-activate"
+        );
+        parser.addOption(dbusActivate);
+
         parser.process(app);
 
         app.setWindowIcon(QIcon::fromTheme("nheko", QIcon{":/logos/nheko.png"}));
@@ -225,7 +230,7 @@ main(int argc, char *argv[])
         // Move the MainWindow to the center
         w.move(screenCenter(w.width(), w.height()));
 
-        if (!(settings.lock()->startInTray() && settings.lock()->tray()))
+        if (!(settings.lock()->startInTray() && settings.lock()->tray()) && !parser.isSet(dbusActivate))
                 w.show();
 
         QObject::connect(&app, &QApplication::aboutToQuit, &w, [&w]() {

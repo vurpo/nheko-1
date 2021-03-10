@@ -94,6 +94,14 @@ class UserSettings : public QObject
         Q_PROPERTY(QString homeserver READ homeserver WRITE setHomeserver NOTIFY homeserverChanged)
         Q_PROPERTY(bool disableCertificateValidation READ disableCertificateValidation WRITE
                      setDisableCertificateValidation NOTIFY disableCertificateValidationChanged)
+        Q_PROPERTY(bool unifiedPushRegistered READ unifiedPushRegistered WRITE
+                     setUnifiedPushRegistered NOTIFY unifiedPushRegisteredChanged)
+        Q_PROPERTY(QString unifiedPushDistributor READ unifiedPushDistributor WRITE
+                     setUnifiedPushDistributor NOTIFY unifiedPushDistributorChanged)
+        Q_PROPERTY(QString unifiedPushToken READ unifiedPushToken WRITE setUnifiedPushToken NOTIFY
+                     unifiedPushTokenChanged)
+        Q_PROPERTY(QString unifiedPushEndpoint READ unifiedPushEndpoint WRITE
+                     setUnifiedPushEndpoint NOTIFY unifiedPushEndpointChanged)
 
         UserSettings();
 
@@ -154,6 +162,10 @@ public:
         void setHomeserver(QString homeserver);
         void setDisableCertificateValidation(bool disabled);
         void setHiddenTags(QStringList hiddenTags);
+        void setUnifiedPushRegistered(bool registered);
+        void setUnifiedPushDistributor(QString distributor);
+        void setUnifiedPushToken(QString token);
+        void setUnifiedPushEndpoint(QString endpoint);
 
         QString theme() const { return !theme_.isEmpty() ? theme_ : defaultTheme_; }
         bool messageHoverHighlight() const { return messageHoverHighlight_; }
@@ -207,6 +219,10 @@ public:
         QString homeserver() const { return homeserver_; }
         bool disableCertificateValidation() const { return disableCertificateValidation_; }
         QStringList hiddenTags() const { return hiddenTags_; }
+        bool unifiedPushRegistered() const { return upRegistered; }
+        QString unifiedPushDistributor() const { return upDistributor; }
+        QString unifiedPushToken() const { return upToken; }
+        QString unifiedPushEndpoint() const { return upEndpoint; }
 
 signals:
         void groupViewStateChanged(bool state);
@@ -249,6 +265,10 @@ signals:
         void deviceIdChanged(QString deviceId);
         void homeserverChanged(QString homeserver);
         void disableCertificateValidationChanged(bool disabled);
+        void unifiedPushRegisteredChanged(bool registered);
+        void unifiedPushDistributorChanged(QString distributor);
+        void unifiedPushTokenChanged(QString token);
+        void unifiedPushEndpointChanged(QString endpoint);
 
 private:
         // Default to system theme if QT_QPA_PLATFORMTHEME var is set.
@@ -297,6 +317,10 @@ private:
         QString deviceId_;
         QString homeserver_;
         QStringList hiddenTags_;
+        bool upRegistered;
+        QString upDistributor;
+        QString upToken;
+        QString upEndpoint;
 
         static QSharedPointer<UserSettings> instance_;
 };

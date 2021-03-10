@@ -200,6 +200,7 @@ private slots:
 private:
         static ChatPage *instance_;
 
+        void registerUnifiedPush();
         void startInitialSync();
         void tryInitialSync();
         void trySync();

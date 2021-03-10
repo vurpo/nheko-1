@@ -119,6 +119,11 @@ UserSettings::load(std::optional<QString> profile)
         userId_      = settings.value(prefix + "auth/user_id", "").toString();
         deviceId_    = settings.value(prefix + "auth/device_id", "").toString();
 
+        upRegistered = settings.value(prefix + "unifiedpush/registered", false).toBool();
+        upDistributor = settings.value(prefix + "unifiedpush/distributor", "").toString();
+        upToken = settings.value(prefix + "unifiedpush/token", "").toString();
+        upEndpoint = settings.value(prefix + "unifiedpush/endpoint", "").toString();
+        
         disableCertificateValidation_ =
           settings.value("disable_certificate_validation", false).toBool();
 
@@ -541,6 +546,50 @@ UserSettings::setDisableCertificateValidation(bool disabled)
 }
 
 void
+UserSettings::setUnifiedPushRegistered(bool registered)
+{
+        if (registered == upRegistered) {
+                return;
+        }
+        upRegistered = registered;
+        emit unifiedPushRegisteredChanged(registered);
+        save();
+}
+
+void
+UserSettings::setUnifiedPushDistributor(QString distributor)
+{
+        if (distributor == upDistributor) {
+                return;
+        }
+        upDistributor = distributor;
+        emit unifiedPushDistributorChanged(distributor);
+        save();
+}
+
+void
+UserSettings::setUnifiedPushToken(QString token)
+{
+        if (token == upToken) {
+                return;
+        }
+        upToken = token;
+        emit unifiedPushTokenChanged(token);
+        save();
+}
+
+void
+UserSettings::setUnifiedPushEndpoint(QString endpoint)
+{
+        if (endpoint == upEndpoint) {
+                return;
+        }
+        upEndpoint = endpoint;
+        emit unifiedPushEndpointChanged(endpoint);
+        save();
+}
+
+void
 UserSettings::applyTheme()
 {
         QFile stylefile;
@@ -654,6 +703,11 @@ UserSettings::save()
         settings.setValue(prefix + "auth/home_server", homeserver_);
         settings.setValue(prefix + "auth/user_id", userId_);
         settings.setValue(prefix + "auth/device_id", deviceId_);
+
+        settings.setValue(prefix + "unifiedpush/registered", upRegistered);
+        settings.setValue(prefix + "unifiedpush/distributor", upDistributor);
+        settings.setValue(prefix + "unifiedpush/token", upToken);
+        settings.setValue(prefix + "unifiedpush/endpoint", upEndpoint);
 
         settings.setValue("disable_certificate_validation", disableCertificateValidation_);
 

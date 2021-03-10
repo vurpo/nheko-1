@@ -9,6 +9,8 @@
 #include <QMessageBox>
 #include <QSettings>
 #include <QShortcut>
+#include <QDBusConnection>
+#include <QDBusMessage>
 
 #include <mtx/responses.hpp>
 
@@ -27,6 +29,7 @@
 #include "RoomList.h"
 #include "SideBarActions.h"
 #include "Splitter.h"
+#include "UnifiedPushConnector.h"
 #include "UserInfoWidget.h"
 #include "UserSettingsPage.h"
 #include "Utils.h"
@@ -71,6 +74,8 @@ ChatPage::ChatPage(QSharedPointer<UserSettings> userSettings, QWidget *parent)
         qRegisterMetaType<mtx::presence::PresenceState>();
         qRegisterMetaType<mtx::secret_storage::AesHmacSha2KeyDescription>();
         qRegisterMetaType<SecretsToDecrypt>();
+
+        registerUnifiedPush();
 
         topLayout_ = new QHBoxLayout(this);
         topLayout_->setSpacing(0);
@@ -700,6 +705,54 @@ ChatPage::showNotificationsDialog(const QPoint &widgetPos)
 
         notifDialog->raise();
         notifDialog->showPopup();
+}
+
+void
+ChatPage::registerUnifiedPush()
+{
+        QDBusConnection bus = QDBusConnection::sessionBus();
+        if (bus.isConnected()) {
+                nhlog::net()->info("Bus connected, registering service");
+                UnifiedPushConnectorAdaptor* connector = new UnifiedPushConnectorAdaptor(userSettings_, this);
+                bus.registerObject("/org/unifiedpush/Connector", this);
+                bus.registerService("io.github.NhekoReborn.Nheko");
+        }
+
+        QString token;
+        QString distributor;
+        if (userSettings_->unifiedPushRegistered()) {
+                token = userSettings_->unifiedPushToken();
+                distributor = userSettings_->unifiedPushDistributor();
+        } else {
+                // Generate random string to use as token
+                // TODO: is this a good way to do it?
+
+                const QString possibleCharacters("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+                const int length = 16;
+
+                for(int i=0; i<length; ++i)
+                {
+                        int index = qrand() % possibleCharacters.length();
+                        QChar nextChar = possibleCharacters.at(index);
+                        token.append(nextChar);
+                }
+                userSettings_->setUnifiedPushToken(token);
+
+                // Choose a distributor to use
+                // TODO: offer a choice instead of hardcoding
+
+                distributor = QString("org.unifiedpush.Distributor.gotify");
+                userSettings_->setUnifiedPushDistributor(distributor);
+        }
+
+        QDBusMessage message = QDBusMessage::createMethodCall(
+                distributor,
+                "/org/unifiedpush/Distributor",
+                "org.unifiedpush.Distributor1",
+                "Register"
+        );
+        message.setArguments({QVariant("io.github.NhekoReborn.Nheko"), QVariant(token)});
+        bus.send(message);
 }
 
 void
