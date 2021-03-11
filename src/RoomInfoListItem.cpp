@@ -246,7 +246,7 @@ RoomInfoListItem::paintEvent(QPaintEvent *event)
                 titlePen.setColor(highlightedTitleColor_);
                 subtitlePen.setColor(highlightedSubtitleColor_);
                 pixmap.fill(highlightedBackgroundColor_);
-        } else if (underMouse()) {
+        } else if (underMouse() && !mobileModeEnabled) {
                 p.fillRect(rect(), hoverBackgroundColor_);
                 titlePen.setColor(hoverTitleColor_);
                 subtitlePen.setColor(hoverSubtitleColor_);
@@ -308,7 +308,7 @@ RoomInfoListItem::paintEvent(QPaintEvent *event)
                         p.save();
                         if (isPressed_) {
                                 p.setPen(QPen(highlightedTimestampColor_));
-                        } else if (underMouse()) {
+                        } else if (underMouse() && !mobileModeEnabled) {
                                 p.setPen(QPen(hoverTimestampColor_));
                         } else {
                                 p.setPen(QPen(timestampColor_));
@@ -454,6 +454,12 @@ RoomInfoListItem::setPressedState(bool state)
                 isPressed_ = state;
                 update();
         }
+}
+
+void
+RoomInfoListItem::setMobileMode(bool enabled)
+{
+        mobileModeEnabled = enabled;
 }
 
 void

@@ -58,6 +58,7 @@ signals:
         void roomAvatarChanged(const QString &room_id, const QString &img);
         void joinRoom(const QString &room_id);
         void updateRoomAvatarCb(const QString &room_id, const QString &img);
+        void mobileModeChanged(bool enabled);
 
 public slots:
         void updateRoomAvatar(const QString &roomid, const QString &img);
@@ -98,4 +99,5 @@ private:
         QString selectedRoom_;
 
         bool isSortPending_ = false;
+        bool mobileModeEnabled;
 };

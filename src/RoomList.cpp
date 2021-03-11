@@ -55,11 +55,21 @@ RoomList::RoomList(QSharedPointer<UserSettings> userSettings, QWidget *parent)
         scrollArea_->setWidget(scrollAreaContents_);
         topLayout_->addWidget(scrollArea_);
 
+        mobileModeEnabled = userSettings->mobileMode();
+
         connect(this, &RoomList::updateRoomAvatarCb, this, &RoomList::updateRoomAvatar);
         connect(userSettings.data(),
                 &UserSettings::roomSortingChanged,
                 this,
                 &RoomList::sortRoomsByLastMessage);
+        connect(userSettings.data(),
+                &UserSettings::mobileModeChanged,
+                this,
+                &RoomList::mobileModeChanged);
+        connect(userSettings.data(),
+                &UserSettings::mobileModeChanged,
+                this,
+                [this](bool enabled) {mobileModeEnabled = enabled;});
 }
 
 void
@@ -67,6 +77,12 @@ RoomList::addRoom(const QString &room_id, const RoomInfo &info)
 {
         auto room_item = new RoomInfoListItem(room_id, info, scrollArea_);
         room_item->setRoomName(QString::fromStdString(std::move(info.name)));
+        room_item->setMobileMode(mobileModeEnabled);
+
+        connect(this,
+                &RoomList::mobileModeChanged,
+                room_item,
+                &RoomInfoListItem::setMobileMode);
 
         connect(room_item, &RoomInfoListItem::clicked, this, &RoomList::highlightSelectedRoom);
         connect(room_item, &RoomInfoListItem::leaveRoom, this, [](const QString &room_id) {

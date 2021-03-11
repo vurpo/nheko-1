@@ -136,6 +136,7 @@ signals:
 
 public slots:
         void setPressedState(bool state);
+        void setMobileMode(bool enabled);
 
 protected:
         void mousePressEvent(QMouseEvent *event) override;
@@ -207,4 +208,6 @@ private:
         QColor bubbleFgColor_;
 
         friend struct room_sort;
+
+        bool mobileModeEnabled;
 };
